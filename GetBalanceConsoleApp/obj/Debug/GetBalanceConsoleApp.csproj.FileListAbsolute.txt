@@ -1,8 +1,0 @@
-C:\MyProjects\GetBalanceConsoleApp\GetBalanceConsoleApp\bin\Debug\GetBalanceConsoleApp.exe.config
-C:\MyProjects\GetBalanceConsoleApp\GetBalanceConsoleApp\bin\Debug\GetBalanceConsoleApp.exe
-C:\MyProjects\GetBalanceConsoleApp\GetBalanceConsoleApp\bin\Debug\GetBalanceConsoleApp.pdb
-C:\MyProjects\GetBalanceConsoleApp\GetBalanceConsoleApp\bin\Debug\Newtonsoft.Json.dll
-C:\MyProjects\GetBalanceConsoleApp\GetBalanceConsoleApp\bin\Debug\Newtonsoft.Json.xml
-C:\MyProjects\GetBalanceConsoleApp\GetBalanceConsoleApp\obj\Debug\GetBalanceConsoleApp.exe
-C:\MyProjects\GetBalanceConsoleApp\GetBalanceConsoleApp\obj\Debug\GetBalanceConsoleApp.pdb
-C:\MyProjects\GetBalanceConsoleApp\GetBalanceConsoleApp\obj\Debug\GetBalanceConsoleApp.csprojResolveAssemblyReference.cache
