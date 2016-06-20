@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
+using System.Runtime.Remoting.Contexts;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.ServiceModel.Dispatcher;
@@ -15,7 +16,7 @@ namespace DotNetTokenValidator
 {
     public class MyInspector : IDispatchMessageInspector
     {
-        private static string azServerBaseURL = "http://9.148.225.65:9080/mfp/api";
+        private static string azServerBaseURL = "http://9.148.225.70:9080/mfp/api";
         private static string scope = "abc";
         private static string myToken = null;
 
@@ -110,6 +111,18 @@ namespace DotNetTokenValidator
             return sendRequest(postParameters, "introspection", "Bearer " + myToken);
         }
 
+        //******************************************************
+        // flushResponse
+        // - This is a helper method for sending headers
+        //   back to the client application.
+        //******************************************************
+        private void flushResponse()
+        {
+            HttpContext.Current.Response.Flush();
+            HttpContext.Current.Response.SuppressContent = true; //Prevent sending content - only headers will be sent
+            HttpContext.Current.ApplicationInstance.CompleteRequest();
+        }
+
         //***************************************
         // preProcess
         //***************************************
@@ -121,7 +134,7 @@ namespace DotNetTokenValidator
                 Console.WriteLine("preProcess()->authHeader is empty");
                 response.StatusCode = HttpStatusCode.Unauthorized;
                 response.Headers.Add(HttpResponseHeader.WwwAuthenticate, "Bearer");
-                HttpContext.Current.Response.End();
+                flushResponse();
             }
 
             // Authorization header does not start with "Bearer"
@@ -130,7 +143,7 @@ namespace DotNetTokenValidator
                 Console.WriteLine("preProcess()->authHeader not starting with Bearer");
                 response.StatusCode = HttpStatusCode.Unauthorized;
                 response.Headers.Add(HttpResponseHeader.WwwAuthenticate, "Bearer");
-                HttpContext.Current.Response.End();
+                flushResponse();
             }
         }
 
@@ -145,7 +158,7 @@ namespace DotNetTokenValidator
                 Console.WriteLine("postProcess()->Conflict response (409)");
                 response.StatusCode = HttpStatusCode.Conflict;
                 response.Headers.Add(currentResponse.Headers);
-                HttpContext.Current.Response.End();
+                flushResponse();
             }
 
             // Create an object from the response
@@ -157,7 +170,7 @@ namespace DotNetTokenValidator
                 Console.WriteLine("postProcess()->active==false");
                 response.StatusCode = HttpStatusCode.Unauthorized;
                 response.Headers.Add(HttpResponseHeader.WwwAuthenticate, "Bearer error=\"invalid_token\"");
-                HttpContext.Current.Response.End();
+                flushResponse();
             }
 
             // Check scope
@@ -166,7 +179,7 @@ namespace DotNetTokenValidator
                 Console.WriteLine("postProcess()->response doesn't include the requested scope");
                 response.StatusCode = HttpStatusCode.Forbidden;
                 response.Headers.Add(HttpResponseHeader.WwwAuthenticate, "Bearer error=\"insufficient_scope\", scope=\"" + scope + "\"");
-                HttpContext.Current.Response.End();
+                flushResponse();
             }
         }
 
