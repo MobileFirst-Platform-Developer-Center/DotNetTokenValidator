@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
-using System.Runtime.Remoting.Contexts;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.ServiceModel.Dispatcher;
@@ -16,7 +15,7 @@ namespace DotNetTokenValidator
 {
     public class MyInspector : IDispatchMessageInspector
     {
-        private const string azServerBaseURL = "http://9.148.225.65:9080/mfp/api";
+        private const string azServerBaseURL = "http://9.148.225.196:9080/mfp/api/az/v1/";
         private const string scope = "accessRestricted";
         private static string filterIntrospectionToken = null;
         private const string filterUserName = "externalResource"; // Confidential Client Username
@@ -34,7 +33,7 @@ namespace DotNetTokenValidator
             }
 
             // ********************** Put /az/v1 as class member
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(new System.Uri(azServerBaseURL + "/az/v1/" + endPoint));
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(new System.Uri(azServerBaseURL + endPoint));
             request.Method = "POST";
             request.ContentType = "application/x-www-form-urlencoded";
             request.Headers.Add(HttpRequestHeader.Authorization, authHeader);
