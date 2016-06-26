@@ -1,8 +1,0 @@
-C:\MyProjects\DotNetTokenValidator\DotNetTokenValidator\bin\Debug\DotNetTokenValidator.exe.config
-C:\MyProjects\DotNetTokenValidator\DotNetTokenValidator\bin\Debug\DotNetTokenValidator.exe
-C:\MyProjects\DotNetTokenValidator\DotNetTokenValidator\bin\Debug\DotNetTokenValidator.pdb
-C:\MyProjects\DotNetTokenValidator\DotNetTokenValidator\bin\Debug\Newtonsoft.Json.dll
-C:\MyProjects\DotNetTokenValidator\DotNetTokenValidator\bin\Debug\Newtonsoft.Json.xml
-C:\MyProjects\DotNetTokenValidator\DotNetTokenValidator\obj\Debug\DotNetTokenValidator.csprojResolveAssemblyReference.cache
-C:\MyProjects\DotNetTokenValidator\DotNetTokenValidator\obj\Debug\DotNetTokenValidator.exe
-C:\MyProjects\DotNetTokenValidator\DotNetTokenValidator\obj\Debug\DotNetTokenValidator.pdb
