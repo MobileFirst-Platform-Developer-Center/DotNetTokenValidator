@@ -114,14 +114,6 @@ namespace DotNetTokenValidator
             HttpContext.Current.Response.SuppressContent = true; //Prevent sending content - only headers will be sent
             HttpContext.Current.ApplicationInstance.CompleteRequest();
         }
-        
-        private void generateCustomResponse(OutgoingWebResponseContext response)
-        {
-            Console.WriteLine("generateCustomResponse()");
-            response.StatusCode = HttpStatusCode.BadRequest;
-            response.Headers.Add(HttpResponseHeader.WwwAuthenticate, "Something went wrong - did not receive 200 ok...");
-            flushResponse();
-        }
 
         //***************************************
         // preProcess
@@ -249,7 +241,7 @@ namespace DotNetTokenValidator
         //**********************************************************
         public void BeforeSendReply(ref Message reply, object correlationState)
         {
-            
+
         }
     }
 }
