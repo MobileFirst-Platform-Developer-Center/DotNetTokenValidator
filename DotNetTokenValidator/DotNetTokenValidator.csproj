@@ -58,7 +58,7 @@
     <Compile Include="azResponse.cs" />
     <Compile Include="GetBalanceService.svc.cs" />
     <Compile Include="IGetBalanceService.cs" />
-    <Compile Include="Inspector\MyExtensionBehavior.cs" />
+    <Compile Include="Inspector\MyCustomBehavior.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Inspector\MyInspector.cs" />
