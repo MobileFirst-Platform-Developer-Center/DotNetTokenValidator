@@ -1,8 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.ServiceModel.Channels;
 using System.ServiceModel.Configuration;
 using System.ServiceModel.Description;
 using System.ServiceModel.Dispatcher;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace DotNetTokenValidator.Inspector
 {
