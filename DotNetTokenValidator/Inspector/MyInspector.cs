@@ -15,17 +15,15 @@ namespace DotNetTokenValidator
 {
     public class MyInspector : IDispatchMessageInspector
     {
-        private const string azServerBaseURL = "http://9.148.225.196:9080/mfp/api/az/v1/";
+        private const string azServerBaseURL = "http://9.148.225.196:9080/mfp/api";
         private const string scope = "accessRestricted";
         private static string filterIntrospectionToken = null;
         private const string filterUserName = "externalResource"; // Confidential Client Username
         private const string filterPassword = "abcd!234";  // Confidential Client Secret
 
-        //*************************************************************************************
+        //***************************************
         // sendRequest
-        // - a helper method that makes a post request to MFP server.
-        //   it is being used by the getToken() and introspectClientRequest() methods
-        //*************************************************************************************
+        //***************************************
         private HttpWebResponse sendRequest(Dictionary<string, string> postParameters, string endPoint, string authHeader)
         {
             string postData = "";
@@ -35,7 +33,7 @@ namespace DotNetTokenValidator
             }
 
             // ********************** Put /az/v1 as class member
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(new System.Uri(azServerBaseURL + endPoint));
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(new System.Uri(azServerBaseURL + "/az/v1/" + endPoint));
             request.Method = "POST";
             request.ContentType = "application/x-www-form-urlencoded";
             request.Headers.Add(HttpRequestHeader.Authorization, authHeader);
@@ -50,14 +48,13 @@ namespace DotNetTokenValidator
             return (HttpWebResponse)request.GetResponse();
         }
 
-        //****************************************************************************************
+        //***************************************
         // getToken
-        // - This method is responsible for obtaining an access token for the message inspector 
-        //   from MFP Authentication Server.
-        //****************************************************************************************
+        //***************************************
         private string getToken()
         {
             Console.WriteLine("getToken()");
+
             string returnVal = null;
             string strResponse = null;
 
@@ -95,13 +92,13 @@ namespace DotNetTokenValidator
             return returnVal;
         }
 
-        //*************************************************************************************
+        //***************************************
         // introspectClientRequest
-        // - This method is responsible for sending the client token to MFP Auth Server
-        //   using the message inspector token in the request header 
-        //*************************************************************************************
+        //***************************************
         private HttpWebResponse introspectClientRequest(string clientToken)
         {
+            Console.WriteLine("introspectClientRequest()");
+
             // Prepare Post Data
             Dictionary<string, string> postParameters = new Dictionary<string, string> { };
             postParameters.Add("token", clientToken);
@@ -121,15 +118,13 @@ namespace DotNetTokenValidator
             HttpContext.Current.ApplicationInstance.CompleteRequest();
         }
 
-        //*************************************************************************************
+        //***************************************
         // preProcess
-        // - This method contains the initial checks of the client request. 
-        //   1. If the authentication header is empty
-        //   2. If the authentication hader does not start with "Bearer"
-        //*************************************************************************************
+        //***************************************
         private void preProcess(OutgoingWebResponseContext response, string authenticationHeader)
         {
-            Console.WriteLine("preProcess");
+            Console.WriteLine("preProcess()");
+
             // No Authorization header
             if (string.IsNullOrEmpty(authenticationHeader))
             {
@@ -140,7 +135,7 @@ namespace DotNetTokenValidator
             }
 
             // Authorization header does not start with "Bearer"
-            else if (!authenticationHeader.StartsWith("Bearer", StringComparison.CurrentCulture))
+            if (!authenticationHeader.StartsWith("Bearer", StringComparison.CurrentCulture))
             {
                 Console.WriteLine("preProcess()->authHeader not starting with Bearer");
                 response.StatusCode = HttpStatusCode.Unauthorized;
@@ -149,19 +144,13 @@ namespace DotNetTokenValidator
             }
         }
 
-        //*************************************************************************************
+        //***************************************
         // postProcess
-        // - This method performs the final checks of the client request. It is being called 
-        //   after the inspector received a token from MFP server and submitted a request
-        //   to the introspection endpoint. This method checks the following:
-        //   First it makes sure that we did not receive a Conflict response (409), 
-        //   then it examines 2 elements from the response:
-        //   1. that active==true
-        //   2. that scope contains the right scope
-        //*************************************************************************************
+        //***************************************
         private void postProcess(OutgoingWebResponseContext response, HttpWebResponse currentResponse, string scope, Message request)
         {
-            Console.WriteLine("postProcess");
+            Console.WriteLine("postProcess()");
+
             // Check Conflict response (409)
             if (currentResponse.StatusCode == HttpStatusCode.Conflict)
             {
@@ -172,7 +161,7 @@ namespace DotNetTokenValidator
             }
 
             // Check if filterToken has expired (401) - if so we should obtain a new token and run validateRequest() again
-            else if (currentResponse.StatusCode == HttpStatusCode.Unauthorized)
+            if (currentResponse.StatusCode == HttpStatusCode.Unauthorized)
             {
                 filterIntrospectionToken = null;
                 validateRequest(request);
@@ -180,43 +169,40 @@ namespace DotNetTokenValidator
             }
 
             // Make sure that HttpStatusCode = 200 ok (before checking active==true & scope)
-            else if (currentResponse.StatusCode == HttpStatusCode.OK)
-            {
-                // Create an object from the response
-                azResponse azResp = new azResponse(currentResponse);
-
-                // Check if active == false
-                if (!azResp.isActive)
-                {
-                    Console.WriteLine("postProcess()->active==false");
-                    response.StatusCode = HttpStatusCode.Unauthorized;
-                    response.Headers.Add(HttpResponseHeader.WwwAuthenticate, "Bearer error=\"invalid_token\"");
-                    flushResponse();
-                }
-
-                // Check scope
-                else if (!azResp.scope.Contains(scope))
-                {
-                    Console.WriteLine("postProcess()->response doesn't include the requested scope");
-                    response.StatusCode = HttpStatusCode.Forbidden;
-                    response.Headers.Add(HttpResponseHeader.WwwAuthenticate, "Bearer error=\"insufficient_scope\", scope=\"" + scope + "\"");
-                    flushResponse();
-                }
-            }
-            else
+            if (currentResponse.StatusCode != HttpStatusCode.OK)
             {
                 throw new WebFaultException<string>("Authentication did not succeed, Please try again...", HttpStatusCode.BadRequest);
-            }            
+            }
+
+            // Create an object from the response
+            azResponse azResp = new azResponse(currentResponse);
+
+            // Check if active == false
+            if (!azResp.isActive)
+            {
+                Console.WriteLine("postProcess()->active==false");
+                response.StatusCode = HttpStatusCode.Unauthorized;
+                response.Headers.Add(HttpResponseHeader.WwwAuthenticate, "Bearer error=\"invalid_token\"");
+                flushResponse();
+            }
+
+            // Check scope
+            if (!azResp.scope.Contains(scope))
+            {
+                Console.WriteLine("postProcess()->response doesn't include the requested scope");
+                response.StatusCode = HttpStatusCode.Forbidden;
+                response.Headers.Add(HttpResponseHeader.WwwAuthenticate, "Bearer error=\"insufficient_scope\", scope=\"" + scope + "\"");
+                flushResponse();
+            }
         }
 
-        //*************************************************************************************
+        //**********************************************************
         // validateRequest
-        // - This is the heart of the message inspector. It is called from 
-        //   AfterReceiveRequest() and initialize the validation process.
-        //*************************************************************************************
+        //**********************************************************
         private void validateRequest(Message request)
         {
-            Console.WriteLine("validateRequest");
+            Console.WriteLine("validateRequest()");
+
             string authHeader = null;
             string authHeaderWithoutBearer = null;
 
@@ -251,7 +237,7 @@ namespace DotNetTokenValidator
         }
 
         //**********************************************************
-        // AfterReceiveRequest (Message Inspector Implementation Method)
+        // AfterReceiveRequest (Filter implementation Method)
         //**********************************************************
         public object AfterReceiveRequest(ref Message request, IClientChannel channel, InstanceContext instanceContext)
         {
@@ -260,7 +246,7 @@ namespace DotNetTokenValidator
         }
 
         //**********************************************************
-        // BeforeSendReply (Message Inspector Implementation Method)
+        // BeforeSendReply (Filter implementation Method)
         //**********************************************************
         public void BeforeSendReply(ref Message reply, object correlationState)
         {
