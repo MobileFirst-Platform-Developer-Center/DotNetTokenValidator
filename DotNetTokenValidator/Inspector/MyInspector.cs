@@ -15,15 +15,17 @@ namespace DotNetTokenValidator
 {
     public class MyInspector : IDispatchMessageInspector
     {
-        private const string azServerBaseURL = "http://9.148.225.196:9080/mfp/api";
+        private const string azServerBaseURL = "http://MFP-SERVER-URL:9080/mfp/api/az/v1/";
         private const string scope = "accessRestricted";
         private static string filterIntrospectionToken = null;
-        private const string filterUserName = "externalResource"; // Confidential Client Username
-        private const string filterPassword = "abcd!234";  // Confidential Client Secret
+        private const string filterUserName = "CONFIDENTIAL-CLIENT-USERNAME";
+        private const string filterPassword = "CONFIDENTIAL-CLIENT-SECRET";
 
-        //***************************************
+        //*************************************************************************************
         // sendRequest
-        //***************************************
+        // - a helper method that makes a post request to MFP server.
+        //   it is being used by the getToken() and introspectClientRequest() methods
+        //*************************************************************************************
         private HttpWebResponse sendRequest(Dictionary<string, string> postParameters, string endPoint, string authHeader)
         {
             string postData = "";
@@ -33,7 +35,7 @@ namespace DotNetTokenValidator
             }
 
             // ********************** Put /az/v1 as class member
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(new System.Uri(azServerBaseURL + "/az/v1/" + endPoint));
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(new System.Uri(azServerBaseURL + endPoint));
             request.Method = "POST";
             request.ContentType = "application/x-www-form-urlencoded";
             request.Headers.Add(HttpRequestHeader.Authorization, authHeader);
@@ -48,9 +50,11 @@ namespace DotNetTokenValidator
             return (HttpWebResponse)request.GetResponse();
         }
 
-        //***************************************
+        //****************************************************************************************
         // getToken
-        //***************************************
+        // - This method is responsible for obtaining an access token for the message inspector
+        //   from MFP Authentication Server.
+        //****************************************************************************************
         private string getToken()
         {
             Console.WriteLine("getToken()");
@@ -92,9 +96,11 @@ namespace DotNetTokenValidator
             return returnVal;
         }
 
-        //***************************************
+        //*************************************************************************************
         // introspectClientRequest
-        //***************************************
+        // - This method is responsible for sending the client token to MFP Auth Server
+        //   using the message inspector token in the request header
+        //*************************************************************************************
         private HttpWebResponse introspectClientRequest(string clientToken)
         {
             Console.WriteLine("introspectClientRequest()");
@@ -118,9 +124,12 @@ namespace DotNetTokenValidator
             HttpContext.Current.ApplicationInstance.CompleteRequest();
         }
 
-        //***************************************
+        //*************************************************************************************
         // preProcess
-        //***************************************
+        // - This method contains the initial checks of the client request.
+        //   1. If the authentication header is empty
+        //   2. If the authentication hader does not start with "Bearer"
+        //*************************************************************************************
         private void preProcess(OutgoingWebResponseContext response, string authenticationHeader)
         {
             Console.WriteLine("preProcess()");
@@ -144,9 +153,16 @@ namespace DotNetTokenValidator
             }
         }
 
-        //***************************************
+        //*************************************************************************************
         // postProcess
-        //***************************************
+        // - This method performs the final checks of the client request. It is being called
+        //   after the inspector received a token from MFP server and submitted a request
+        //   to the introspection endpoint. This method checks the following:
+        //   First it makes sure that we did not receive a Conflict response (409),
+        //   then it examines 2 elements from the response:
+        //   1. that active==true
+        //   2. that scope contains the right scope
+        //*************************************************************************************
         private void postProcess(OutgoingWebResponseContext response, HttpWebResponse currentResponse, string scope, Message request)
         {
             Console.WriteLine("postProcess()");
@@ -196,9 +212,11 @@ namespace DotNetTokenValidator
             }
         }
 
-        //**********************************************************
+        //*************************************************************************************
         // validateRequest
-        //**********************************************************
+        // - This is the heart of the message inspector. It is called from
+        //   AfterReceiveRequest() and initialize the validation process.
+        //*************************************************************************************
         private void validateRequest(Message request)
         {
             Console.WriteLine("validateRequest()");
@@ -250,7 +268,7 @@ namespace DotNetTokenValidator
         //**********************************************************
         public void BeforeSendReply(ref Message reply, object correlationState)
         {
-            
+
         }
     }
 }
