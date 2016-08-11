@@ -11,21 +11,24 @@
 / See the License for the specific language governing permissions and
 / limitations under the License.
 
-﻿using Newtonsoft.Json.Linq;
+
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
+using System.Diagnostics;
 using System.Net;
 using System.Text;
 
 namespace DotNetTokenValidator
 {
-    public class AzResponse
+    public class azResponse
     {
         public string username { get; set; }
         public string scope { get; set; }
         public string client_id { get; set; }
-        public bool isActive { get; set; }
-        
-        public AzResponse(HttpWebResponse input)
+        public Boolean isActive { get; set; }
+
+        public azResponse(HttpWebResponse input)
         {
             string strInput;
 
@@ -35,20 +38,54 @@ namespace DotNetTokenValidator
             {
                 strInput = reader.ReadToEnd();
             }
+            Debug.WriteLine("[azResponse] strInput. {0}", strInput);
 
+            // Assign values
+            username = getPropertyValueAsString(strInput, "username");
+            scope = getPropertyValueAsString(strInput, "scope");
+            client_id = getPropertyValueAsString(strInput, "client_id");
+            isActive = getPropertyValueAsBool(strInput, "active");
+            //mfp_application - build json
+            //mfp_device - build json
+            //mfp_user - build json
+        }
+
+        private string getPropertyValueAsString(string jsonString, string propertyName)
+        {
+            string returnVal = null;
             try
             {
-                JToken token = JObject.Parse(strInput);
-                username = (string)token.SelectToken("username");
-                scope = (string)token.SelectToken("scope");
-                client_id = (string)token.SelectToken("client_id");
-                isActive = (bool)token.SelectToken("active");
+                JToken token = JObject.Parse(jsonString);
+                returnVal = (string)token.SelectToken(propertyName);
             }
-            catch(Exception ex)
+            catch (WebException authHeaderScopeExc)
             {
-                Console.WriteLine(ex.Message);
+                Debug.WriteLine("[azResponse->getPropertyValue] Could not parse data. {0}", authHeaderScopeExc);
             }
+            catch (JsonReaderException authHeaderScopeJSONExc)
+            {
+                Debug.WriteLine("[azResponse->getPropertyValue] Could not parse data. {0}", authHeaderScopeJSONExc);
+            }
+            return returnVal;
+        }
 
+        private Boolean getPropertyValueAsBool(string jsonString, string propertyName)
+        {
+            Boolean returnVal = false;
+            try
+            {
+                JToken token = JObject.Parse(jsonString);
+                returnVal = (Boolean)token.SelectToken(propertyName);
+            }
+            catch (WebException authHeaderScopeExc)
+            {
+                Debug.WriteLine("[azResponse->getPropertyValue] Could not parse data. {0}", authHeaderScopeExc);
+            }
+            catch (JsonReaderException authHeaderScopeJSONExc)
+            {
+                Debug.WriteLine("[azResponse->getPropertyValue] Could not parse data. {0}", authHeaderScopeJSONExc);
+            }
+            return returnVal;
         }
     }
 }
